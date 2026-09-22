@@ -138,3 +138,99 @@ export function Console({ tab }: { tab: AppTab }) {
     </div>
   );
 }
+
+function OverviewPanel({
+  loading,
+  data,
+}: {
+  loading: boolean;
+  data: Awaited<ReturnType<typeof getOverviewFn>> | undefined;
+}) {
+  if (loading || !data) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Skeleton className="h-28" />
+        <Skeleton className="h-28" />
+        <Skeleton className="h-28" />
+      </div>
+    );
+  }
+  const mode = data.connection.mode;
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+          Console
+        </p>
+        <h1 className="mt-2 font-display text-4xl tracking-tight">Overview</h1>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Storage" value={mode === "s3" ? data.connection.bucket : "Sandbox"}>
+          <Badge tone={mode === "s3" ? "ok" : "neutral"}>
+            {mode === "s3" ? "S3" : "Sandbox"}
+          </Badge>
+        </Stat>
+        <Stat label="Objects" value={String(data.objectCount)}>
+          <span className="text-sm text-muted tabular-nums">
+            {formatBytes(data.totalBytes)}
+          </span>
+        </Stat>
+        <Stat label="MCP tokens" value={String(data.tokens.length)}>
+          <span className="text-sm text-muted">
+            Last upload {formatRelative(data.lastUploadAt)}
+          </span>
+        </Stat>
+      </div>
+      <Card className="p-5">
+        <h2 className="text-sm font-medium">Activity</h2>
+        {data.recent.length === 0 ? (
+          <p className="mt-4 text-sm text-muted">
+            No events yet. Upload a file or run a tool from the MCP playground.
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-line">
+            {data.recent.map((row) => (
+              <li
+                key={row.id}
+                className="flex items-start justify-between gap-3 py-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className={row.ok ? "text-fg" : "text-danger"}>
+                    <span className="font-mono text-[12px]">{row.action}</span>
+                    {row.key ? (
+                      <span className="ml-2 text-muted">{row.key}</span>
+                    ) : null}
+                  </p>
+                  {row.detail ? (
+                    <p className="truncate text-xs text-subtle">{row.detail}</p>
+                  ) : null}
+                </div>
+                <span className="shrink-0 text-xs text-subtle tabular-nums">
+                  {formatRelative(row.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value: string;
+  children?: ReactNode;
+}) {
+  return (
+    <Card className="p-5">
+      <p className="text-xs uppercase tracking-wider text-subtle">{label}</p>
+      <p className="mt-2 truncate font-display text-3xl tracking-tight">{value}</p>
+      <div className="mt-3">{children}</div>
+    </Card>
+  );
+}

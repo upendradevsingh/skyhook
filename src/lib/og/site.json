@@ -1,0 +1,5 @@
+{
+  "title": "Skyhook",
+  "card": "custom",
+  "description": "MCP server for uploading files to Amazon S3"
+}
